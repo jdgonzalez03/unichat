@@ -1,0 +1,80 @@
+package services;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import connection.ConnectionDB;
+import model.Model_User_Register;
+import utils.Logger;
+import model.Model_Response;
+import model.Model_User;
+import utils.PasswordUtils;
+
+public class ServiceUser {
+    private final Connection connection;
+    Logger logger = Logger.getInstance();
+    PasswordUtils passwordUtils = PasswordUtils.getInstance();
+
+    public ServiceUser() {
+        this.connection = ConnectionDB.getInstance().getConnection();
+    }
+
+    public Model_Response register(Model_User_Register userData) {
+        Model_Response response = new Model_Response();
+
+        try {
+            // Verificar si el email ya existe
+            PreparedStatement checkStmt = connection.prepareStatement(CHECK_USER_IN_DB);
+            checkStmt.setString(1, userData.getEmail());
+            ResultSet resultSet = checkStmt.executeQuery();
+
+            if (resultSet.next()) {
+                response.setSuccess(false);
+                response.setMessage("El usuario con el correo electrónico " + userData.getEmail() + " ya se encuentra registrado.");
+                logger.log("El usuario con el correo electrónico " + userData.getEmail() + " ya se encuentra registrado.");
+                resultSet.close();
+                checkStmt.close();
+                return response;
+            }
+            resultSet.close();
+            checkStmt.close();
+
+            // Si no existe, crear el nuevo usuario
+            String username = userData.getUsername();
+            String password = passwordUtils.hashPassword(userData.getPassword());
+            String email = userData.getEmail();
+
+            PreparedStatement createStmt = connection.prepareStatement(CREATE_USER);
+            createStmt.setString(1, username);
+            createStmt.setNull(2, java.sql.Types.VARCHAR); // Imagen en NULL
+            createStmt.setString(3, email);
+            createStmt.setString(4, password);
+
+            int rowsInserted = createStmt.executeUpdate();
+            createStmt.close();
+
+            if (rowsInserted > 0) {
+                response.setSuccess(true);
+                response.setMessage("Usuario registrado exitosamente.");
+                response.setData(new Model_User(username, null , email));
+                logger.log("Usuario: " + email + " registrado exitosamente.");
+            } else {
+                response.setSuccess(false);
+                response.setMessage("No se pudo registrar el usuario.");
+                response.setData(null);
+            }
+
+        } catch (Exception e) {
+            logger.log("Algo salió mal registrando al usuario. Error: " + e.getMessage());
+            response.setSuccess(false);
+            response.setMessage("Error al registrar el usuario.");
+        }
+
+        return response;
+    }
+
+    private final String CHECK_USER_IN_DB = "SELECT * FROM users WHERE email = ?";
+    private final String CREATE_USER = "INSERT INTO users (username, image, email, password) VALUES (?, ?, ?, ?)";
+}
