@@ -63,4 +63,8 @@ public class ConfigLoader {
     public String getServerPort(){
         return properties.getProperty("server.port");
     }
+
+    public String getServerApiPort(){
+        return properties.getProperty("server.api.port");
+    }
 }

@@ -18,7 +18,9 @@ import model.Model_User_Register;
 import model.Model_User_Login;
 
 import services.ServiceUser;
+import services.ServiceUser;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +32,7 @@ public class Services {
 
     ConfigLoader configLoader = ConfigLoader.getInstance();
     Logger logger = Logger.getInstance();
+    ServicesApi serverApi = ServicesApi.getInstance();
 
     public static Services getInstance() {
         if (instance == null) {
@@ -43,7 +46,7 @@ public class Services {
         this.localClients = new ArrayList<Model_Client>();
     }
 
-    public void startServer(){
+    public void startServer() throws IOException {
         Configuration config = new Configuration();
 
         String portFromProperties = configLoader.getServerPort();
@@ -84,6 +87,8 @@ public class Services {
         });
 
         server.start();
+        //Inicializo api rest
+        serverApi.initAPI();
     }
 
     public void addClient(SocketIOClient client, Model_User user){

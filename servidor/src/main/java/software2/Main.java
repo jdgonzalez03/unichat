@@ -8,6 +8,7 @@ import connection.ConnectionDB;
 import services.Services;
 
 import javax.swing.*;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -39,7 +40,13 @@ public class Main {
                 server = new ServerUI();
                 splash.setVisible(false);
                 splash.dispose();
-                services.startServer();
+                try {
+                    services.startServer();
+                } catch (IOException e) {
+                    logger.log("Error al iniciar el servidor" + e.getMessage());
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                }
             });
         }).start();
         logger.log("Inicializando proyecto");
