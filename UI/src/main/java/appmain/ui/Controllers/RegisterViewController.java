@@ -4,6 +4,7 @@ import appmain.ui.model.Model_Response;
 import appmain.ui.model.Model_User;
 import appmain.ui.model.Model_User_Register;
 import com.google.gson.Gson;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
@@ -14,6 +15,8 @@ import utils.Logger;
 import java.lang.reflect.Type;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 public class RegisterViewController {
@@ -75,36 +78,45 @@ public class RegisterViewController {
             return;
         }
 
-        Model_User_Register data = new Model_User_Register(username, email, password);
+        Model_User_Register data = new Model_User_Register(email, username, password);
+        AtomicBoolean success = new AtomicBoolean(false);
+        AtomicReference<String> message = new AtomicReference<>("Algo salió mal.");
 
         authService.registerUser(data, (args) -> {
             logger.log("Solicitud de registro enviada al servidor");
 
             if (args.length >= 2) {
-                boolean success = (Boolean) args[0];
-                String message = (String) args[1];
+                success.set((Boolean) args[0]);
+                message.set((String) args[1]);
                 Object rawData = args.length >= 3 ? args[2] : null;
 
                 logger.log("Éxito: " + success);
                 logger.log("Mensaje: " + message);
 
-                if (success && rawData != null) {
-                    // Si sabes qué tipo de objeto es data (por ejemplo, Model_User), puedes convertirlo
+                if (success.get() && rawData != null) {
                     Gson gson = new Gson();
                     Model_User user = gson.fromJson(rawData.toString(), Model_User.class);
-
                     logger.log("Usuario registrado: " + user.getUsername());
                 }
+
+                // Mostrar alerta y cerrar ventana dentro del callback
+                Platform.runLater(() -> {
+                    if (success.get()) {
+                        showAlert("Registrado", message.get() + " .Inicia sesión ahora.", Alert.AlertType.INFORMATION);
+                        closeWindow();
+                    } else {
+                        showAlert("Error", message.get(), Alert.AlertType.WARNING);
+                    }
+
+                });
             } else {
                 logger.log("Respuesta inesperada del servidor.");
+                Platform.runLater(() -> {
+                    showAlert("Error", "Respuesta inesperada del servidor.", Alert.AlertType.ERROR);
+                });
             }
         });
 
-
-        //TODO: Llamar al servicio
-        //Mostrar Alerta
-        showAlert("Registrado", "Registrado exitosamente.", Alert.AlertType.INFORMATION );
-        closeWindow();
     }
 
     private void openLoginForm() {

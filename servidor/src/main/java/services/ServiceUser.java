@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import connection.ConnectionDB;
+import model.Model_User_Login;
 import model.Model_User_Register;
 import utils.Logger;
 import model.Model_Response;
@@ -70,6 +71,52 @@ public class ServiceUser {
             logger.log("Algo salió mal registrando al usuario. Error: " + e.getMessage());
             response.setSuccess(false);
             response.setMessage("Error al registrar el usuario.");
+        }
+
+        return response;
+    }
+
+    public Model_Response login(Model_User_Login userData) {
+        Model_Response response = new Model_Response();
+
+        try {
+            PreparedStatement checkStmt = connection.prepareStatement(CHECK_USER_IN_DB);
+            checkStmt.setString(1, userData.getEmail());
+            ResultSet resultSet = checkStmt.executeQuery();
+
+            if (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String username = resultSet.getString("username");
+                String image = resultSet.getString("image");
+                String email = resultSet.getString("email");
+                String password = resultSet.getString("password");
+
+                //Validate password
+                boolean isCorrectPassword = passwordUtils.verifyPassword(userData.getPassword(), password);
+
+                if (isCorrectPassword) {
+                    Model_User user = new Model_User(username, image, email);
+                    response.setSuccess(true);
+                    response.setMessage("Login exitoso para el usuario: " + userData.getEmail());
+                    response.setData(user);
+                    logger.log("Login exitoso.");
+                }else {
+                    response.setSuccess(false);
+                    response.setMessage("Contraseña incorrecta para el usuario: " + userData.getEmail());
+                    response.setData(null);
+                    logger.log("Contraseña incorrecta");
+                }
+            } else {
+                response.setSuccess(false);
+                response.setMessage("El usuario no existe.");
+                response.setData(null);
+                logger.log("El usuario no existe: ."+ userData.getEmail());
+            }
+        } catch (Exception e) {
+            logger.log("Algo salió mal al iniciar sesión. Error: " + e.getMessage());
+            e.printStackTrace();
+            response.setSuccess(false);
+            response.setMessage("Error al iniciar sesión con el usuario: " + userData.getEmail());
         }
 
         return response;

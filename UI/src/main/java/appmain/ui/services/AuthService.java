@@ -1,5 +1,6 @@
 package appmain.ui.services;
 
+import appmain.ui.model.Model_User_Login;
 import appmain.ui.model.Model_User_Register;
 import com.google.gson.Gson;
 import io.socket.client.Ack;
@@ -17,5 +18,10 @@ public class AuthService {
     public void registerUser(Model_User_Register user, Ack callback) {
         String json = gson.toJson(user);
         socket.emit("register", gson.fromJson(json, Object.class), callback);
+    }
+
+    public void loginUser(Model_User_Login user, Ack callback){
+        String json = gson.toJson(user);
+        socket.emit("login", gson.fromJson(json, Object.class), callback);
     }
 }

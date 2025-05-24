@@ -15,6 +15,7 @@ import utils.Logger;
 import model.Model_Client;
 import model.Model_Response;
 import model.Model_User_Register;
+import model.Model_User_Login;
 
 import services.ServiceUser;
 
@@ -63,6 +64,16 @@ public class Services {
             public void onData(SocketIOClient client, Model_User_Register data, AckRequest ackRequest){
                 logger.log("El cliente" + client.getRemoteAddress() + " se quiere registrar como: " + data.getUsername());
                 Model_Response response = serviceUser.register(data);
+
+                ackRequest.sendAckData(response.isSuccess(), response.getMessage(), response.getData());
+            }
+        });
+        
+        server.addEventListener("login", Model_User_Login.class, new DataListener<Model_User_Login>() {
+            @Override
+            public void onData(SocketIOClient client, Model_User_Login data, AckRequest ackRequest){
+                logger.log("El cliente" + client.getRemoteAddress() + " quiere iniciar sesión como: " + data.getEmail());
+                Model_Response response = serviceUser.login(data);
 
                 ackRequest.sendAckData(response.isSuccess(), response.getMessage(), response.getData());
 
