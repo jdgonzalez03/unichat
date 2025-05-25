@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import connection.ConnectionDB;
 import model.Model_User_Login;
@@ -122,6 +124,32 @@ public class ServiceUser {
         return response;
     }
 
+    public List<Model_User> allUsers() {
+        List<Model_User> users = new ArrayList<Model_User>();
+        try {
+            PreparedStatement checkStmt = connection.prepareStatement(ALL_USERS);
+            ResultSet resultSet = checkStmt.executeQuery();
+            while (resultSet.next()) {
+                Model_User user = new Model_User(
+                        resultSet.getInt("id"),
+                        resultSet.getString("username"),
+                        resultSet.getString("image"),
+                        resultSet.getString("email"),
+                        resultSet.getString("password")
+                );
+                users.add(user);
+            }
+            logger.log("Todos los usuarios: " + users.size());
+
+        }catch (Exception e) {
+            e.printStackTrace();
+            logger.log("Algo salió mal obteniendo todos los usuarios. Error: " + e.getMessage());
+        }
+
+        return users;
+    }
+
     private final String CHECK_USER_IN_DB = "SELECT * FROM users WHERE email = ?";
     private final String CREATE_USER = "INSERT INTO users (username, image, email, password) VALUES (?, ?, ?, ?)";
+    private final String ALL_USERS = "SELECT * FROM users";
 }

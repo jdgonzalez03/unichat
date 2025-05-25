@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import config.ConfigLoader;
 import utils.Logger;
+import services.ServiceUser;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -20,8 +21,11 @@ public class ServicesApi {
     private final ConfigLoader config = ConfigLoader.getInstance();
     private final Logger logger = Logger.getInstance();
     private final ObjectMapper mapper = new ObjectMapper();  // Jackson
+    private final ServiceUser serviceUser;
 
-    private ServicesApi() {}
+    private ServicesApi() {
+        this.serviceUser = new ServiceUser();
+    }
 
     public static synchronized ServicesApi getInstance() {
         if (instance == null) {
@@ -35,7 +39,7 @@ public class ServicesApi {
         server = HttpServer.create(new InetSocketAddress(port), 0);
 
         server.createContext("/", new HelloHandler());
-        server.createContext("/" + config.getServerName() + "/api/users", new HelloHandler2());
+        server.createContext("/" + config.getServerName() + "/api/users", new AllUsersHandler());
 
         server.setExecutor(null);
         server.start();
@@ -70,7 +74,7 @@ public class ServicesApi {
         }
     }
 
-    private class HelloHandler2 implements HttpHandler {
+    private class AllUsersHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
@@ -80,10 +84,9 @@ public class ServicesApi {
             logger.log("Request: " + exchange.getRequestURI());
 
             // Objeto que queremos enviar como JSON
-            ResponseMessage responseMessage = new ResponseMessage("success", "API está funcionando correctamente en api/users");
 
             // Convertir objeto a JSON
-            String response = mapper.writeValueAsString(responseMessage);
+            String response = mapper.writeValueAsString(serviceUser.allUsers());
 
             // Configurar headers
             exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
