@@ -5,3 +5,14 @@ CREATE TABLE users (
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL
 );
+
+CREATE TABLE messages (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    message TEXT NOT NULL,
+    timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    sender_email VARCHAR(100) NOT NULL,
+    receiver_email VARCHAR(100),
+    group_name VARCHAR(100),
+    FOREIGN KEY (sender_email) REFERENCES users(email),
+    FOREIGN KEY (receiver_email) REFERENCES users(email)
+);
