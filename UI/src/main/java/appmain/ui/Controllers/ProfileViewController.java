@@ -2,8 +2,6 @@ package appmain.ui.Controllers;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import appmain.ui.MainViewController;
 
@@ -73,7 +71,7 @@ public class ProfileViewController {
         alert.showAndWait();
     }
 
-    public void setUserData(String username, String email, String fullName, String status) {
+    public void setUserData(String username, String email, String fullName) {
     }
 
     public void setMainController(MainViewController mainViewController) {

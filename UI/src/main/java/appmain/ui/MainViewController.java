@@ -1,6 +1,10 @@
 package appmain.ui;
 
 import appmain.ui.Controllers.GroupViewController;
+import appmain.ui.model.Model_User;
+import appmain.ui.model.Model_User_With_Status;
+import appmain.ui.services.Services;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -15,6 +19,8 @@ import appmain.ui.Controllers.ProfileViewController;
 import appmain.ui.Controllers.RegisterViewController;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 
@@ -42,17 +48,25 @@ public class MainViewController {
     @FXML private Button attachButton;
 
     private RegisterViewController registerViewController;
+    Services services = Services.getInstance();
+
+    //usuarios
+    private List<Model_User_With_Status> users;
 
     // Variables para los datos del perfil y estado de autenticación
     private boolean isLogin = false; // Cambia a true cuando el usuario está logueado
+
+    //TODO: Add image later
     private String username = "";
+    private int userId;
     private String email = "";
-    private String fullName = "";
-    private String status = "Disponible";
+    private String status = "online";
 
     @FXML
     public void initialize() {
         registerViewController = new RegisterViewController();
+        users = new ArrayList<>();
+        services.setMainViewController(this);
 
         // Configurar la interfaz según el estado de autenticación
         updateAuthenticationState();
@@ -170,7 +184,7 @@ public class MainViewController {
             Scene profileScene = new Scene(loader.load(), 500, 700);
 
             ProfileViewController controller = loader.getController();
-            controller.setUserData(username, email, fullName, status);
+            controller.setUserData(username, email, status);
             controller.setMainController(this);
 
             Stage profileStage = new Stage();
@@ -217,10 +231,10 @@ public class MainViewController {
         alert.showAndWait();
     }
 
-    // Método llamado desde LoginViewController cuando el login es exitoso
-    public void onLoginSuccess(String username, String email) {
-        this.username = username;
-        this.email = email;
+    public void onLoginSuccess(Model_User user) {
+        this.username = user.getUsername();
+        this.email = user.getEmail();
+        this.userId = user.getId();
         this.isLogin = true;
         updateAuthenticationState();
     }
@@ -229,7 +243,6 @@ public class MainViewController {
     public void updateProfileInfo(String username, String email, String fullName, String status) {
         this.username = username;
         this.email = email;
-        this.fullName = fullName;
         this.status = status;
         usernameLabel.setText(username);
     }
@@ -240,10 +253,10 @@ public class MainViewController {
         // En una implementación real, estos vendrían de una base de datos o servicio
         String[] sampleNames = {"Ana García", "Carlos López", "María Rodríguez", "Juan Pérez", "Laura Torres"};
 
-        for (String name : sampleNames) {
-            HBox contactItem = createContactItem(name, "En línea", false);
-            contactsContainer.getChildren().add(contactItem);
-        }
+//        for (String name : sampleNames) {
+//            HBox contactItem = createContactItem(name, "En línea", false);
+//            contactsContainer.getChildren().add(contactItem);
+//        }
     }
 
     //TODO: Implementar logica para traer los ejemplso reales
@@ -283,6 +296,19 @@ public class MainViewController {
         return itemContainer;
     }
 
+    public void updateUserList(List<Model_User_With_Status> users) {
+        Platform.runLater(() -> {
+            contactsContainer.getChildren().clear();
+            for (Model_User_With_Status user : users) {
+                String online = user.isOnline() ? "online" : "offline";
+                HBox userBox = createContactItem(user.getUser().getUsername(), online, false);
+                contactsContainer.getChildren().add(userBox);
+            }
+            this.users = users;
+        });
+    }
+
+
     private void openChat(String name, String status, boolean isGroup) {
         // Cambiar a la vista de chat y actualizar la información
         welcomeScreen.setVisible(false);
@@ -309,5 +335,14 @@ public class MainViewController {
 
         messageBox.getChildren().add(messageText);
         messagesContainer.getChildren().add(messageBox);
+    }
+
+    //Some getters and setters
+    public List<Model_User_With_Status> getUsers() {
+        return users;
+    }
+
+    public void setUsers(List<Model_User_With_Status> users) {
+        this.users = users;
     }
 }

@@ -70,16 +70,20 @@ public class LoginViewController {
                 logger.log("Éxito: " + success);
                 logger.log("Mensaje: " + message);
 
+                Model_User user = null;
+
                 if (success.get() && rawData != null) {
                     Gson gson = new Gson();
-                    Model_User user = gson.fromJson(rawData.toString(), Model_User.class);
+                    user = gson.fromJson(rawData.toString(), Model_User.class);
+                    //emitir evento para obtener los usuarios?
 
                     logger.log("Usuario logueado: " + user.getUsername());
                 }
-
+                Model_User finalUser = user; // variable efectiva para usar dentro de lambda
                 Platform.runLater(() -> {
                     if (success.get()) {
                         showAlert("Login", message.get(), Alert.AlertType.INFORMATION );
+                        mainController.onLoginSuccess(finalUser);
                         closeWindow();
                     }else{
                         showAlert("Login",message.get(), Alert.AlertType.WARNING );
@@ -92,13 +96,6 @@ public class LoginViewController {
                 });
             }
         });
-
-        //TODO: Probar con el servidor
-        //loginController.loguearse(loginRequestDto);
-        //System.out.println("He logueado: " + email);
-
-        //TODO: Extracción de datos del response, para continuar ???
-        //String username = email.split("@")[0];
 
         //mainController.onLoginSuccess(username, email);
     }

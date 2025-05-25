@@ -10,6 +10,7 @@ import com.corundumstudio.socketio.listener.DataListener;
 
 import config.ConfigLoader;
 import model.*;
+import net.bytebuddy.matcher.StringMatcher;
 import utils.Logger;
 
 import services.ServiceUser;
@@ -64,6 +65,11 @@ public class Services {
                 Model_Response response = serviceUser.register(data);
 
                 ackRequest.sendAckData(response.isSuccess(), response.getMessage(), response.getData());
+
+                //Enviar lista de usuarios a cada cliente que esta en localClients
+                if (response.isSuccess()) {
+                    broadcastUserListToAllClients();
+                }
             }
         });
         
@@ -74,9 +80,9 @@ public class Services {
                 Model_Response response = serviceUser.login(data);
 
                 ackRequest.sendAckData(response.isSuccess(), response.getMessage(), response.getData());
-                //TODO: Actualizar lista de usuarios cuando alguiente se loguea "list_users"
                 if(response.isSuccess()){
                     addClient(client, (Model_User) response.getData());
+                    broadcastUserListToAllClients();
                 }
             }
         });
@@ -93,6 +99,15 @@ public class Services {
             }
         });
 
+        server.addDisconnectListener(client -> {
+            logger.log("Cliente desconectado: " + client.getRemoteAddress());
+            // Remover cliente de la lista local
+            localClients.removeIf(c -> c.getClient().getSessionId().equals(client.getSessionId()));
+            // Enviar nueva lista a todos
+            broadcastUserListToAllClients();
+        });
+
+
         server.start();
         //Inicializo api rest
         serverApi.initAPI();
@@ -101,4 +116,16 @@ public class Services {
     public void addClient(SocketIOClient client, Model_User user){
         localClients.add(new Model_Client(client, user));
     }
+
+    private void broadcastUserListToAllClients() {
+        for (Model_Client c : localClients) {
+            Model_User user = c.getUser();
+            Model_Request_UserList request = new Model_Request_UserList(
+                    user.getUsername(), user.getEmail()
+            );
+            List<Model_User_With_Status> personalizedList = serviceUser.getUsers(request, localClients);
+            c.getClient().sendEvent("list_users", personalizedList.toArray());
+        }
+    }
+
 }

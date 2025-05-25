@@ -94,7 +94,7 @@ public class ServiceUser {
                 boolean isCorrectPassword = passwordUtils.verifyPassword(userData.getPassword(), password);
 
                 if (isCorrectPassword) {
-                    Model_User user = new Model_User(username, image, email);
+                    Model_User user = new Model_User(id, username, image, email);
                     response.setSuccess(true);
                     response.setMessage("Login exitoso para el usuario: " + userData.getEmail());
                     response.setData(user);
