@@ -8,11 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import connection.ConnectionDB;
-import model.Model_User_Login;
-import model.Model_User_Register;
+import model.*;
 import utils.Logger;
-import model.Model_Response;
-import model.Model_User;
 import utils.PasswordUtils;
 
 public class ServiceUser {
@@ -124,6 +121,48 @@ public class ServiceUser {
         return response;
     }
 
+    //TODO: Cambiar cuando tenga el p2p
+    public List<Model_User_With_Status> getUsers(Model_Request_UserList userRequest, List<Model_Client> clients) {
+        List<Model_User_With_Status> users = new ArrayList<>();
+
+        try{
+            PreparedStatement checkStmt = connection.prepareStatement(GET_ALL_USER_EXCEPT);
+            checkStmt.setString(1, userRequest.getUsername());
+            checkStmt.setString(2, userRequest.getEmail());
+
+            ResultSet resultSet = checkStmt.executeQuery();
+            while (resultSet.next()) {
+                Model_User user = new Model_User(
+                        resultSet.getInt("id"),
+                        resultSet.getString("username"),
+                        resultSet.getString("image"),
+                        resultSet.getString("email")
+                );
+
+                boolean online = isUserOnline(user, clients);
+                users.add(new Model_User_With_Status(user, online));
+            }
+
+            logger.log("Total de usuarios: " + users.size());
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.log("Algo salió mal obteniendo todos los usuarios. Error: " + e.getMessage());
+        }
+
+        return users;
+    }
+
+    private boolean isUserOnline(Model_User user, List<Model_Client> listClients){
+        for(Model_Client client : listClients){
+            if (client.getUser().getEmail().equals(user.getEmail())){
+                return true;
+            }
+
+        }
+        return false;
+    }
+
+    //Just for API server
     public List<Model_User> allUsers() {
         List<Model_User> users = new ArrayList<Model_User>();
         try {
@@ -152,4 +191,6 @@ public class ServiceUser {
     private final String CHECK_USER_IN_DB = "SELECT * FROM users WHERE email = ?";
     private final String CREATE_USER = "INSERT INTO users (username, image, email, password) VALUES (?, ?, ?, ?)";
     private final String ALL_USERS = "SELECT * FROM users";
+    private final String GET_ALL_USER_EXCEPT = "SELECT id, username, image, email FROM users WHERE NOT (username = ? AND email = ?)";
+
 }

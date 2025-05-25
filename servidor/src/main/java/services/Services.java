@@ -9,13 +9,8 @@ import com.corundumstudio.socketio.listener.ConnectListener;
 import com.corundumstudio.socketio.listener.DataListener;
 
 import config.ConfigLoader;
-import model.Model_User;
+import model.*;
 import utils.Logger;
-
-import model.Model_Client;
-import model.Model_Response;
-import model.Model_User_Register;
-import model.Model_User_Login;
 
 import services.ServiceUser;
 import services.ServiceUser;
@@ -79,10 +74,22 @@ public class Services {
                 Model_Response response = serviceUser.login(data);
 
                 ackRequest.sendAckData(response.isSuccess(), response.getMessage(), response.getData());
-
+                //TODO: Actualizar lista de usuarios cuando alguiente se loguea "list_users"
                 if(response.isSuccess()){
                     addClient(client, (Model_User) response.getData());
                 }
+            }
+        });
+
+        //TODO: Change when add p2p
+        server.addEventListener("list_users", Model_Request_UserList.class, new DataListener<Model_Request_UserList>() {
+            @Override
+            public void onData(SocketIOClient client, Model_Request_UserList data, AckRequest ackRequest){
+                logger.log("El cliente " + client.getRemoteAddress() + " quiere listar todos los usuarios como: " + data.getUsername());
+                List<Model_User_With_Status> list_users = serviceUser.getUsers(data, localClients);
+
+                client.sendEvent("list_users", list_users.toArray());
+                logger.log("Enviando lista actualizada de usuarios a: " + data.getUsername() + " en " + client.getRemoteAddress());
             }
         });
 

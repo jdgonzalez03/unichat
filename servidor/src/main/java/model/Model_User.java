@@ -65,6 +65,13 @@ public class Model_User {
         this.email = email;
     }
 
+    public Model_User(int id, String username, String image, String email) {
+        this.id = id;
+        this.username = username;
+        this.image = image;
+        this.email = email;
+    }
+
     public Model_User(Object json) {
         try {
             JsonMapper mapper = new JsonMapper();
