@@ -1,6 +1,7 @@
 package appmain.ui.services;
 
 import appmain.ui.MainViewController;
+import appmain.ui.model.Model_Receive_Message;
 import appmain.ui.model.Model_User_With_Status;
 import com.google.gson.Gson;
 import io.socket.client.Socket;
@@ -51,6 +52,18 @@ public class Services {
                     if (mainViewController != null) {
                         mainViewController.updateUserList(users);
                         logger.log("Lista de usuarios, esta siendo actualizada");
+                    }
+                }
+            });
+            client.on("receive_message_from", new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    Gson gson = new Gson();
+                    Model_Receive_Message msg = gson.fromJson(args[0].toString(), Model_Receive_Message.class);
+
+                    if (mainViewController != null) {
+                        logger.log("Mensaje recibido de: " + msg.getMessage());
+                        logger.log("Mensaje: " + msg.getMessage());
                     }
                 }
             });

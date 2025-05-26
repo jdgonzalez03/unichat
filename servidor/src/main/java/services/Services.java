@@ -24,6 +24,7 @@ public class Services {
     private static Services instance;
     private SocketIOServer server;
     private ServiceUser serviceUser;
+    private ServiceMessage serviceMessage;
     private List<Model_Client> localClients;
 
     ConfigLoader configLoader = ConfigLoader.getInstance();
@@ -40,6 +41,7 @@ public class Services {
     private Services() {
         this.serviceUser = new ServiceUser();
         this.localClients = new ArrayList<Model_Client>();
+        this.serviceMessage = new ServiceMessage();
     }
 
     public void startServer() throws IOException {
@@ -99,6 +101,14 @@ public class Services {
             }
         });
 
+        server.addEventListener("send_message_to", Model_Message.class, new DataListener<Model_Message>() {
+            @Override
+            public void onData(SocketIOClient client, Model_Message data, AckRequest ackRequest){
+                logger.log("Enviando mensaje de: " + data.getSenderEmail() + " en " + client.getRemoteAddress() + " a: " + data.getReceiverEmail());
+                sendMessageToClient(data, ackRequest);
+            }
+        });
+
         server.addDisconnectListener(client -> {
             logger.log("Cliente desconectado: " + client.getRemoteAddress());
             // Remover cliente de la lista local
@@ -125,6 +135,17 @@ public class Services {
             );
             List<Model_User_With_Status> personalizedList = serviceUser.getUsers(request, localClients);
             c.getClient().sendEvent("list_users", personalizedList.toArray());
+        }
+    }
+
+    private void sendMessageToClient(Model_Message message, AckRequest ackRequest){
+        //TODO: Implementar tipo de mensaje para enviar documentos
+        //TODO: Modificar lógica para el p2p
+        for (Model_Client c : localClients) {
+            if (c.getUser().getEmail().equals(message.getReceiverEmail()) ) {
+                Model_Receive_Message msg = serviceMessage.saveMessageAndFormat(message);
+                c.getClient().sendEvent("receive_message_from", msg);
+            }
         }
     }
 
