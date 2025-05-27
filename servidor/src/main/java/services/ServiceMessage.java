@@ -7,6 +7,7 @@ import utils.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.util.Date;
 
 public class ServiceMessage {
     private final Connection connection;
@@ -21,7 +22,12 @@ public class ServiceMessage {
         try{
             PreparedStatement checkStmt = connection.prepareStatement(SAVE_MSG);
             checkStmt.setString(1, message.getMessage());
-            checkStmt.setTimestamp(2, new java.sql.Timestamp(message.getTimestamp().getTime())); // usa el timestamp del cliente
+
+            if (message.getTimestamp() == null) {
+                message.setTimestamp(new Date());  // Asegura que no sea null
+            }
+            checkStmt.setTimestamp(2, new java.sql.Timestamp(message.getTimestamp().getTime()));
+
             checkStmt.setString(3, message.getSenderEmail());
 
             if (message.getReceiverEmail() != null) {
@@ -30,8 +36,8 @@ public class ServiceMessage {
                 checkStmt.setNull(4, java.sql.Types.VARCHAR);
             }
 
-            if (message.getSenderEmail() != null) {
-                checkStmt.setString(5, message.getSenderEmail());
+            if (message.getGroupName() != null) {
+                checkStmt.setString(5, message.getGroupName());
             }else{
                 checkStmt.setNull(5, java.sql.Types.VARCHAR);
             }

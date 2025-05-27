@@ -1,12 +1,15 @@
 package appmain.ui;
 
 import appmain.ui.Controllers.GroupViewController;
+import appmain.ui.model.Model_Message;
 import appmain.ui.model.Model_User;
 import appmain.ui.model.Model_User_With_Status;
+import appmain.ui.services.MessageService;
 import appmain.ui.services.Services;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -17,9 +20,11 @@ import javafx.stage.StageStyle;
 import appmain.ui.Controllers.LoginViewController;
 import appmain.ui.Controllers.ProfileViewController;
 import appmain.ui.Controllers.RegisterViewController;
+import utils.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -49,6 +54,7 @@ public class MainViewController {
 
     private RegisterViewController registerViewController;
     Services services = Services.getInstance();
+    Logger logger = Logger.getInstance();
 
     //usuarios
     private List<Model_User_With_Status> users;
@@ -62,11 +68,17 @@ public class MainViewController {
     private String email = "";
     private String status = "online";
 
+    //For send messages
+    private String receiverEmail = "";
+
+    private MessageService messageService;
+
     @FXML
     public void initialize() {
         registerViewController = new RegisterViewController();
         users = new ArrayList<>();
         services.setMainViewController(this);
+        messageService = new MessageService();
 
         // Configurar la interfaz según el estado de autenticación
         updateAuthenticationState();
@@ -78,7 +90,6 @@ public class MainViewController {
         setupProfileButton();
 
         // Cargar contactos y grupos de ejemplo
-        loadSampleContacts();
         loadSampleGroups();
 
         // Configurar el campo de mensaje y el botón de enviar
@@ -247,17 +258,6 @@ public class MainViewController {
         usernameLabel.setText(username);
     }
 
-    //TODO: Implemeentar logica para traer los contactos reales
-    private void loadSampleContacts() {
-        // Este método cargará contactos de ejemplo en el sidebar
-        // En una implementación real, estos vendrían de una base de datos o servicio
-        String[] sampleNames = {"Ana García", "Carlos López", "María Rodríguez", "Juan Pérez", "Laura Torres"};
-
-//        for (String name : sampleNames) {
-//            HBox contactItem = createContactItem(name, "En línea", false);
-//            contactsContainer.getChildren().add(contactItem);
-//        }
-    }
 
     //TODO: Implementar logica para traer los ejemplso reales
     private void loadSampleGroups() {
@@ -319,12 +319,28 @@ public class MainViewController {
         Label chatStatusLabel = (Label) chatScreen.lookup("#chatStatusLabel");
 
         if (chatNameLabel != null) chatNameLabel.setText(name);
-        if (chatStatusLabel != null) chatStatusLabel.setText(isGroup ? status : "En línea");
+        if (chatStatusLabel != null) {
+            if (isGroup) {
+                chatStatusLabel.setText(status);
+            } else {
+                // Buscar el estado real del usuario
+                String realStatus = "offline"; // por defecto
+                for (Model_User_With_Status user : users) {
+                    if (user.getUser().getUsername().equals(name)) {
+                        realStatus = user.isOnline() ? "online" : "offline";
+                        setReceiverEmail(user.getUser().getEmail());
+                        break;
+                    }
+                }
+                chatStatusLabel.setText(realStatus);
+            }
+        }
+
     }
 
     private void sendMessage(String message) {
-        // Este método añadiría el mensaje a la conversación actual
-        // En una implementación real, enviaría el mensaje a través de un servicio
+        if (message == null || message.trim().isEmpty()) return;
+
         VBox messagesContainer = (VBox) chatScreen.lookup("#messagesContainer");
 
         HBox messageBox = new HBox();
@@ -335,6 +351,17 @@ public class MainViewController {
 
         messageBox.getChildren().add(messageText);
         messagesContainer.getChildren().add(messageBox);
+
+        //TODO: Add logic for groups
+        Model_Message msg = new Model_Message();
+        msg.setMessage(message);
+        msg.setSenderEmail(email);
+        msg.setReceiverEmail(getReceiverEmail());
+
+        messageService.sendMessage(msg, (args) -> {
+            logger.log("Mensaje enviado a:" + msg.getReceiverEmail());
+        });
+
     }
 
     //Some getters and setters
@@ -344,5 +371,13 @@ public class MainViewController {
 
     public void setUsers(List<Model_User_With_Status> users) {
         this.users = users;
+    }
+
+    public String getReceiverEmail() {
+        return receiverEmail;
+    }
+
+    public void setReceiverEmail(String receiverEmail) {
+        this.receiverEmail = receiverEmail;
     }
 }

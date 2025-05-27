@@ -4,14 +4,17 @@ import appmain.ui.MainViewController;
 import appmain.ui.model.Model_Receive_Message;
 import appmain.ui.model.Model_User_With_Status;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import io.socket.client.Socket;
 import io.socket.client.IO;
 
 import io.socket.emitter.Emitter;
+import utils.DateDeserializer;
 import utils.Logger;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class Services {
@@ -58,11 +61,14 @@ public class Services {
             client.on("receive_message_from", new Emitter.Listener() {
                 @Override
                 public void call(Object... args) {
-                    Gson gson = new Gson();
+                    Gson gson = new GsonBuilder()
+                            .registerTypeAdapter(Date.class, new DateDeserializer())
+                            .create();
+
                     Model_Receive_Message msg = gson.fromJson(args[0].toString(), Model_Receive_Message.class);
 
                     if (mainViewController != null) {
-                        logger.log("Mensaje recibido de: " + msg.getMessage());
+                        logger.log("Mensaje recibido de: " + msg.getSenderEmail());
                         logger.log("Mensaje: " + msg.getMessage());
                     }
                 }

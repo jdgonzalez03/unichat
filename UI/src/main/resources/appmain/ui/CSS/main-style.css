@@ -357,3 +357,34 @@
 .register-button:hover {
     -fx-background-color: derive(-fx-dracula-green, -20%);
 }
+
+
+/* Contenedor del mensaje (HBox) */
+.message-bubble {
+    -fx-padding: 8px 12px;
+    -fx-background-radius: 12px;
+    -fx-max-width: 300px;
+    -fx-wrap-text: true;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.2), 3, 0, 0, 1);
+}
+
+/* Mensajes enviados por el usuario */
+.sent-message {
+    -fx-background-color: -fx-dracula-cyan;
+    -fx-alignment: CENTER_RIGHT;
+    -fx-translate-x: 100px; /* para alinearlos a la derecha si no usas otro layout */
+}
+
+/* Mensajes recibidos */
+.received-message {
+    -fx-background-color: -fx-dracula-comment;
+    -fx-alignment: CENTER_LEFT;
+    -fx-translate-x: 0;
+}
+
+/* Texto dentro del mensaje */
+.message-bubble Label {
+    -fx-text-fill: -fx-dracula-background;
+    -fx-font-size: 14px;
+    -fx-wrap-text: true;
+}
