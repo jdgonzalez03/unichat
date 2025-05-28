@@ -1,9 +1,7 @@
 package appmain.ui;
 
 import appmain.ui.Controllers.GroupViewController;
-import appmain.ui.model.Model_Message;
-import appmain.ui.model.Model_User;
-import appmain.ui.model.Model_User_With_Status;
+import appmain.ui.model.*;
 import appmain.ui.services.MessageService;
 import appmain.ui.services.Services;
 import javafx.application.Platform;
@@ -23,10 +21,7 @@ import appmain.ui.Controllers.RegisterViewController;
 import utils.Logger;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 
 public class MainViewController {
@@ -60,7 +55,7 @@ public class MainViewController {
     private List<Model_User_With_Status> users;
 
     // Variables para los datos del perfil y estado de autenticación
-    private boolean isLogin = false; // Cambia a true cuando el usuario está logueado
+    private boolean isLogin = false;
 
     //TODO: Add image later
     private String username = "";
@@ -70,8 +65,9 @@ public class MainViewController {
 
     //For send messages
     private String receiverEmail = "";
-
     private MessageService messageService;
+
+    private final Map<String, Model_ChatData> chatMap = new HashMap<>();
 
     @FXML
     public void initialize() {
@@ -336,21 +332,22 @@ public class MainViewController {
             }
         }
 
+        String chatReference = isGroup ? name : getReceiverEmail();
+        Model_ChatData chatData = chatMap.computeIfAbsent(chatReference, Model_ChatData::new);
+
+        VBox messagesContainer = (VBox) chatScreen.lookup("#messagesContainer");
+        messagesContainer.getChildren().clear();
+
+        for (ChatMessage msg : chatData.getMessages()) {
+            displayMessageInChat(msg.getMessage(), msg.isSent());
+        }
+
+        chatData.setHasUnreadMessages(false);
+        //actualizar indicador de mensajes
     }
 
     private void sendMessage(String message) {
         if (message == null || message.trim().isEmpty()) return;
-
-        VBox messagesContainer = (VBox) chatScreen.lookup("#messagesContainer");
-
-        HBox messageBox = new HBox();
-        messageBox.getStyleClass().addAll("message-bubble", "sent-message");
-
-        Label messageText = new Label(message);
-        messageText.setWrapText(true);
-
-        messageBox.getChildren().add(messageText);
-        messagesContainer.getChildren().add(messageBox);
 
         //TODO: Add logic for groups
         Model_Message msg = new Model_Message();
@@ -358,10 +355,51 @@ public class MainViewController {
         msg.setSenderEmail(email);
         msg.setReceiverEmail(getReceiverEmail());
 
+        Model_ChatData chat = chatMap.computeIfAbsent(getReceiverEmail(), Model_ChatData::new);
+        chat.addMessage(msg);
+
+        displayMessageInChat(message, msg.isSent());
+
         messageService.sendMessage(msg, (args) -> {
             logger.log("Mensaje enviado a:" + msg.getReceiverEmail());
         });
 
+    }
+
+    private void displayMessageInChat(String message, boolean isSent) {
+        VBox messagesContainer = (VBox) chatScreen.lookup("#messagesContainer");
+
+        HBox messageBox = new HBox();
+
+        if (isSent) {
+            messageBox.getStyleClass().addAll("message-bubble", "sent-message");
+        }else{
+            messageBox.getStyleClass().addAll("message-bubble", "received-message");
+        }
+
+        Label messageText = new Label(message);
+        messageText.setWrapText(true);
+
+        messageBox.getChildren().add(messageText);
+        messagesContainer.getChildren().add(messageBox);
+    }
+
+    public void receiveMessage(Model_Receive_Message message) {
+        if (message == null || message.getMessage().trim().isEmpty()) return;
+        //TODO: Add logic for groups
+        String senderEmail = message.getSenderEmail();
+        Model_ChatData chat = chatMap.computeIfAbsent(senderEmail, Model_ChatData::new);
+        chat.addMessage(message);
+
+
+        if(!senderEmail.equals(getReceiverEmail())) {
+            chat.setHasUnreadMessages(true);
+            //actualizar contador de mensajes
+        }
+
+        if(senderEmail.equals(getReceiverEmail())) {
+            displayMessageInChat(message.getMessage(), message.isSent());
+        }
     }
 
     //Some getters and setters

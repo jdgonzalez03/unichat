@@ -1,8 +1,9 @@
 package appmain.ui.model;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class Model_Message {
+public class Model_Message implements ChatMessage {
     private int id;
     private String message;
     private Date timestamp;
@@ -29,6 +30,7 @@ public class Model_Message {
         this.id = id;
     }
 
+    @Override
     public String getMessage() {
         return message;
     }
@@ -67,5 +69,15 @@ public class Model_Message {
 
     public void setGroupName(String groupName) {
         this.groupName = groupName;
+    }
+
+    @Override
+    public Date getTimestampForChatMessage(){
+        return timestamp;
+    }
+
+    @Override
+    public boolean isSent(){
+        return true;
     }
 }

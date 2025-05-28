@@ -9,6 +9,7 @@ import io.socket.client.Socket;
 import io.socket.client.IO;
 
 import io.socket.emitter.Emitter;
+import javafx.application.Platform;
 import utils.DateDeserializer;
 import utils.Logger;
 
@@ -69,7 +70,11 @@ public class Services {
 
                     if (mainViewController != null) {
                         logger.log("Mensaje recibido de: " + msg.getSenderEmail());
+
                         logger.log("Mensaje: " + msg.getMessage());
+                        Platform.runLater(()->{
+                            mainViewController.receiveMessage(msg);
+                        });
                     }
                 }
             });
