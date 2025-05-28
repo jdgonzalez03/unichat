@@ -8,6 +8,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -284,7 +285,13 @@ public class MainViewController {
         statusLabel.getStyleClass().add("contact-status");
 
         infoContainer.getChildren().addAll(nameLabel, statusLabel);
-        itemContainer.getChildren().addAll(profileCircle, infoContainer);
+
+        Label unreadIndicator = new Label("●");
+        unreadIndicator.getStyleClass().add("unread-indicator");
+        unreadIndicator.setVisible(false);
+
+        itemContainer.getChildren().addAll(profileCircle, infoContainer, unreadIndicator);
+
 
         // Agregar evento de clic para abrir el chat
         itemContainer.setOnMouseClicked(event -> openChat(name, status, isGroup));
@@ -344,6 +351,7 @@ public class MainViewController {
 
         chatData.setHasUnreadMessages(false);
         //actualizar indicador de mensajes
+        updateContactUnreadIndicator(name, false);
     }
 
     private void sendMessage(String message) {
@@ -370,15 +378,22 @@ public class MainViewController {
         VBox messagesContainer = (VBox) chatScreen.lookup("#messagesContainer");
 
         HBox messageBox = new HBox();
-
-        if (isSent) {
-            messageBox.getStyleClass().addAll("message-bubble", "sent-message");
-        }else{
-            messageBox.getStyleClass().addAll("message-bubble", "received-message");
-        }
+        messageBox.setMaxWidth(Double.MAX_VALUE);
 
         Label messageText = new Label(message);
+
         messageText.setWrapText(true);
+        messageText.setMaxWidth(Double.MAX_VALUE);
+
+        HBox.setHgrow(messageText, Priority.ALWAYS);
+
+        if (isSent) {
+            messageText.getStyleClass().addAll("message-bubble", "sent-message");
+            messageBox.setAlignment(Pos.CENTER_RIGHT);
+        } else {
+            messageText.getStyleClass().addAll("message-bubble", "received-message");
+            messageBox.setAlignment(Pos.CENTER_LEFT);
+        }
 
         messageBox.getChildren().add(messageText);
         messagesContainer.getChildren().add(messageBox);
@@ -395,10 +410,30 @@ public class MainViewController {
         if(!senderEmail.equals(getReceiverEmail())) {
             chat.setHasUnreadMessages(true);
             //actualizar contador de mensajes
+            for (Model_User_With_Status user : users) {
+                if (user.getUser().getEmail().equals(senderEmail)) {
+                    updateContactUnreadIndicator(user.getUser().getUsername(), true);
+                }
+            }
         }
 
         if(senderEmail.equals(getReceiverEmail())) {
             displayMessageInChat(message.getMessage(), message.isSent());
+        }
+    }
+
+    private void updateContactUnreadIndicator(String chatId, boolean hasUnread) {
+        for (Node node : contactsContainer.getChildren()) {
+            if (node instanceof HBox hbox) {
+                Label nameLabel = (Label) hbox.lookup(".contact-name");
+                if (nameLabel != null && nameLabel.getText().equals(chatId)) {
+                    Label unreadIndicator = (Label) hbox.lookup(".unread-indicator");
+                    if (unreadIndicator != null) {
+                        unreadIndicator.setVisible(hasUnread);
+                    }
+                    break;
+                }
+            }
         }
     }
 
