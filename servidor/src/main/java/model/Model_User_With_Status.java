@@ -9,7 +9,7 @@ public class Model_User_With_Status {
         this.online = online;
     }
 
-    public Model_User_With_Status(Model_User user) {}
+    public Model_User_With_Status() {}
 
     public Model_User getUser() {
         return user;

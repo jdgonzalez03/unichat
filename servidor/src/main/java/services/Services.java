@@ -25,6 +25,7 @@ public class Services {
     private SocketIOServer server;
     private ServiceUser serviceUser;
     private ServiceMessage serviceMessage;
+    private ServiceGroups serviceGroups;
     private List<Model_Client> localClients;
 
     ConfigLoader configLoader = ConfigLoader.getInstance();
@@ -42,6 +43,7 @@ public class Services {
         this.serviceUser = new ServiceUser();
         this.localClients = new ArrayList<Model_Client>();
         this.serviceMessage = new ServiceMessage();
+        this.serviceGroups = new ServiceGroups();
     }
 
     public void startServer() throws IOException {
@@ -109,6 +111,20 @@ public class Services {
             }
         });
 
+        server.addEventListener("create_group", Model_Create_Group.class, new DataListener<Model_Create_Group>() {
+            @Override
+            public void onData(SocketIOClient client, Model_Create_Group data, AckRequest ackRequest){
+                logger.log("El usuario " + data.getCreator_email() + " esta tratando de crear un grupo");
+                Model_Response response = serviceGroups.createGroup(data);
+
+                Model_Join_Group request = new Model_Join_Group(data.getName(), data.getDescription(), data.getCreator_email());
+                for (Model_User_With_Status member: data.getMembers()) {
+                    sendRequestToJoinGroup(member, request);
+                }
+                ackRequest.sendAckData(response.isSuccess(), response.getMessage(), response.getData());
+            }
+        });
+
         server.addDisconnectListener(client -> {
             logger.log("Cliente desconectado: " + client.getRemoteAddress());
             // Remover cliente de la lista local
@@ -145,6 +161,14 @@ public class Services {
             if (c.getUser().getEmail().equals(message.getReceiverEmail()) ) {
                 Model_Receive_Message msg = serviceMessage.saveMessageAndFormat(message);
                 c.getClient().sendEvent("receive_message_from", msg);
+            }
+        }
+    }
+
+    private void sendRequestToJoinGroup(Model_User_With_Status user, Model_Join_Group request){
+        for (Model_Client c : localClients) {
+            if (c.getUser().getEmail().equals(user.getUser().getEmail())) {
+                c.getClient().sendEvent("join_group", request);
             }
         }
     }

@@ -453,4 +453,8 @@ public class MainViewController {
     public void setReceiverEmail(String receiverEmail) {
         this.receiverEmail = receiverEmail;
     }
+
+    public String getUserEmail() {
+        return email;
+    }
 }

@@ -71,6 +71,7 @@ public class Model_User {
         this.image = image;
         this.email = email;
     }
+    public Model_User() {}
 
     public Model_User(Object json) {
         try {

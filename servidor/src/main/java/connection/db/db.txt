@@ -16,3 +16,32 @@ CREATE TABLE messages (
     FOREIGN KEY (sender_email) REFERENCES users(email),
     FOREIGN KEY (receiver_email) REFERENCES users(email)
 );
+
+CREATE TABLE groups (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL UNIQUE,  -- nombre único visible
+    description TEXT,
+    creator_email VARCHAR(100) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (creator_email) REFERENCES users(email) ON DELETE CASCADE
+);
+
+CREATE TABLE group_members (
+    group_name VARCHAR(100),
+    user_email VARCHAR(100),
+    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (group_name, user_email),
+    FOREIGN KEY (group_name) REFERENCES groups(name) ON DELETE CASCADE,
+    FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE CASCADE
+);
+
+
+CREATE TABLE group_invitations (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    group_name VARCHAR(100),
+    invited_email VARCHAR(100),
+    status ENUM('pending', 'accepted', 'rejected') DEFAULT 'pending',
+    invited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (group_name) REFERENCES groups(name) ON DELETE CASCADE,
+    FOREIGN KEY (invited_email) REFERENCES users(email) ON DELETE CASCADE
+);
