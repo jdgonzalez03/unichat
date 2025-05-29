@@ -1,6 +1,6 @@
 package appmain.ui;
 
-import appmain.ui.Controllers.GroupViewController;
+import appmain.ui.Controllers.*;
 import appmain.ui.model.*;
 import appmain.ui.services.MessageService;
 import appmain.ui.services.Services;
@@ -16,9 +16,6 @@ import javafx.scene.shape.Circle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import appmain.ui.Controllers.LoginViewController;
-import appmain.ui.Controllers.ProfileViewController;
-import appmain.ui.Controllers.RegisterViewController;
 import utils.Logger;
 
 import java.io.IOException;
@@ -39,6 +36,7 @@ public class MainViewController {
     @FXML private Button loginButton;
     @FXML private Button registerButton;
     @FXML private Button settingsButton;
+    @FXML private Button requestButton;
     @FXML private Button profileButton;
     @FXML private Label usernameLabel;
     @FXML private Circle profilePic;
@@ -54,6 +52,8 @@ public class MainViewController {
 
     //usuarios
     private List<Model_User_With_Status> users;
+    private List<Model_Join_Group> requests = new ArrayList<>();
+
 
     // Variables para los datos del perfil y estado de autenticación
     private boolean isLogin = false;
@@ -105,6 +105,7 @@ public class MainViewController {
             // Ocultar controles de la barra superior
             profileButton.setVisible(false);
             settingsButton.setVisible(false);
+            requestButton.setVisible(false);
         } else {
             // Ocultar pantalla de login y mostrar interfaz principal
             loginScreen.setVisible(false);
@@ -114,6 +115,7 @@ public class MainViewController {
             // Mostrar controles de la barra superior
             profileButton.setVisible(true);
             settingsButton.setVisible(true);
+            requestButton.setVisible(true);
 
             // Actualizar información del usuario
             usernameLabel.setText(username.isEmpty() ? "Usuario" : username);
@@ -126,6 +128,7 @@ public class MainViewController {
         addGroupButton.setOnAction(event -> openNewGroupForm());
         settingsButton.setOnAction(event -> openSettingsView());
         attachButton.setOnAction(event -> openSubmitFile() );
+        requestButton.setOnAction(event -> openRequestForm());
     }
 
     private void setupProfileButton() {
@@ -201,6 +204,24 @@ public class MainViewController {
             profileStage.setScene(profileScene);
             profileStage.showAndWait();
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void openRequestForm(){
+        try{
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/appmain/ui/Registration/request-view.fxml"));
+            Scene requestScene = new Scene(loader.load(), 500, 700);
+
+            RequestViewController controller = loader.getController();
+            controller.setRequests(getRequests());
+
+            Stage requestStage= new Stage();
+            requestStage.initStyle(StageStyle.UNDECORATED);
+            requestStage.initModality(Modality.APPLICATION_MODAL);
+            requestStage.setScene(requestScene);
+            requestStage.showAndWait();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -456,5 +477,13 @@ public class MainViewController {
 
     public String getUserEmail() {
         return email;
+    }
+
+    public List<Model_Join_Group> getRequests() {
+        return requests;
+    }
+
+    public void setRequests(List<Model_Join_Group> requests) {
+        this.requests = requests;
     }
 }

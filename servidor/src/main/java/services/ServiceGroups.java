@@ -1,15 +1,15 @@
 package services;
 
 import connection.ConnectionDB;
-import model.Model_Create_Group;
-import model.Model_Response;
-import model.Model_User_With_Status;
+import model.*;
 import utils.Logger;
 import utils.PasswordUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ServiceGroups {
     private final Connection connection;
@@ -72,7 +72,37 @@ public class ServiceGroups {
         return response;
     }
 
+    public List<Model_Join_Group> getAllPendingRequests(Model_User user){
+        List<Model_Join_Group> requests = new ArrayList<>();
+
+        try{
+            PreparedStatement checkStmt = connection.prepareStatement(GET_ALL_PENDING_REQUESTS);
+            checkStmt.setString(1, user.getEmail());
+
+            ResultSet resultSet = checkStmt.executeQuery();
+            while (resultSet.next()) {
+                Model_Join_Group request = new Model_Join_Group();
+                request.setName_group(resultSet.getString("group_name"));
+                request.setDescription_group(resultSet.getString("description_group"));
+                request.setCreator_group(resultSet.getString("creator_group"));
+
+                requests.add(request);
+            }
+        } catch (Exception e) {
+            logger.log("Algo salió mal obteniendo las solicitudes con estado pendiente");
+            e.printStackTrace();
+        }
+
+        return requests;
+    }
+
     private final String CHECK_GROUP_IN_DB = "SELECT 1 FROM groups WHERE name = ?";
     private final String CREATE_GROUP = "INSERT INTO groups (name, description, creator_email) VALUES (?, ?, ?)";
     private final String SEND_REQUEST_TO_MEMBERS = "INSERT INTO group_invitations (group_name, invited_email) VALUES (?, ?)";
+    private final String GET_ALL_PENDING_REQUESTS =
+            "SELECT gi.group_name, g.description AS description_group, g.creator_email AS creator_group " +
+                    "FROM group_invitations gi " +
+                    "JOIN groups g ON gi.group_name = g.name " +
+                    "WHERE gi.invited_email = ? AND gi.status = 'pending'";
+
 }

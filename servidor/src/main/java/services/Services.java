@@ -87,6 +87,10 @@ public class Services {
                 if(response.isSuccess()){
                     addClient(client, (Model_User) response.getData());
                     broadcastUserListToAllClients();
+
+                    //Enviar las invitaciones
+                    List<Model_Join_Group> requests = serviceGroups.getAllPendingRequests((Model_User) response.getData());
+                    sendAllPendingRequestToJoinGroup((Model_User) response.getData(), requests);
                 }
             }
         });
@@ -168,7 +172,16 @@ public class Services {
     private void sendRequestToJoinGroup(Model_User_With_Status user, Model_Join_Group request){
         for (Model_Client c : localClients) {
             if (c.getUser().getEmail().equals(user.getUser().getEmail())) {
-                c.getClient().sendEvent("join_group", request);
+                c.getClient().sendEvent("request_join_group", request);
+            }
+        }
+    }
+
+    private void sendAllPendingRequestToJoinGroup(Model_User user, List<Model_Join_Group> requests){
+        for(Model_Client c: localClients){
+            if(c.getUser().getEmail().equals(user.getEmail())){
+                logger.log("Total de inviaciontes " + requests.size() + " enviadas a: " + user.getEmail());
+                c.getClient().sendEvent("request_join_group", requests.toArray());
             }
         }
     }

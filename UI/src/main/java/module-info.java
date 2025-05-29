@@ -12,6 +12,7 @@ module p2p.ui {
     requires engine.io.client;
     requires socket.io.client;
     requires com.google.gson;
+    requires java.desktop;
 
     opens appmain.ui to javafx.fxml, com.google.gson;
     opens appmain.ui.model to com.google.gson;

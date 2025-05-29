@@ -14,6 +14,11 @@
                 <Text styleClass="app-title" text="UniChat" />
             </HBox>
             <HBox alignment="CENTER_RIGHT" styleClass="profile-container" HBox.hgrow="ALWAYS">
+                <Button fx:id="requestButton" text="Invitaciones a grupo" styleClass="icon-button">
+                    <graphic>
+                        <Region styleClass="settings-icon" />
+                    </graphic>
+                </Button>
                 <Button fx:id="settingsButton" text="Configuración" styleClass="icon-button">
                     <graphic>
                         <Region styleClass="settings-icon" />

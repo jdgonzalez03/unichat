@@ -1,6 +1,7 @@
 package appmain.ui.services;
 
 import appmain.ui.MainViewController;
+import appmain.ui.model.Model_Join_Group;
 import appmain.ui.model.Model_Receive_Message;
 import appmain.ui.model.Model_User_With_Status;
 import com.google.gson.Gson;
@@ -75,6 +76,24 @@ public class Services {
                         Platform.runLater(()->{
                             mainViewController.receiveMessage(msg);
                         });
+                    }
+                }
+            });
+
+            client.on("request_join_group", new Emitter.Listener() {
+                @Override
+                public void call(Object... objects) {
+                    Gson gson = new Gson();
+                    List<Model_Join_Group> requests = new ArrayList<>();
+                    for (Object o : objects) {
+                        Model_Join_Group request = gson.fromJson(o.toString(), Model_Join_Group.class);
+                        requests.add(request);
+                    }
+
+                    if (mainViewController != null) {
+                        logger.log("Lista de requests, esta siendo actualizada");
+                        mainViewController.setRequests(requests);
+                        logger.log("Total de requests: " + requests.size());
                     }
                 }
             });

@@ -110,3 +110,58 @@
 .terms-checkbox, .auth-text {
     -fx-text-fill: -fx-dracula-foreground;
 }
+
+
+/* Contenedor de solicitud */
+.request-item {
+    -fx-padding: 10px;
+    -fx-background-color: #2c2f3f;
+    -fx-background-radius: 8px;
+    -fx-spacing: 10px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);
+}
+
+/* Texto de la solicitud */
+.request-label {
+    -fx-text-fill: -fx-dracula-foreground;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+/* Botón de aceptar */
+.accept-button {
+    -fx-background-color: -fx-dracula-green;
+    -fx-text-fill: -fx-dracula-background;
+    -fx-background-radius: 4px;
+    -fx-font-weight: bold;
+    -fx-padding: 4px 12px;
+    -fx-cursor: hand;
+}
+
+.accept-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #00e676, #00c853);
+}
+
+.accept-button:pressed {
+    -fx-background-color: #00a84f;
+    -fx-translate-y: 1;
+}
+
+/* Botón de rechazar */
+.reject-button {
+    -fx-background-color: -fx-dracula-pink;
+    -fx-text-fill: -fx-dracula-background;
+    -fx-background-radius: 4px;
+    -fx-font-weight: bold;
+    -fx-padding: 4px 12px;
+    -fx-cursor: hand;
+}
+
+.reject-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #ff8ecf, #ff4081);
+}
+
+.reject-button:pressed {
+    -fx-background-color: #d81b60;
+    -fx-translate-y: 1;
+}
