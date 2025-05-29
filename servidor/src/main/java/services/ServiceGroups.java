@@ -96,6 +96,56 @@ public class ServiceGroups {
         return requests;
     }
 
+    public Model_Response responsePendingRequest(Model_Join_Group_Response data) {
+        Model_Response response = new Model_Response();
+        String invitedEmail = data.getInvitedEmail();
+        String groupName = data.getGroupName();
+
+        try {
+            PreparedStatement stmt;
+            if (data.getAccepted()) {
+                logger.log("estamos aceptando");
+                stmt = connection.prepareStatement(UPDATE_TO_ACCEPTED_PENDING_REQUEST);
+            } else {
+                logger.log("estamos rechazando");
+
+                stmt = connection.prepareStatement(UPDATE_TO_DECLINED_PENDING_REQUEST);
+            }
+            stmt.setString(1, groupName);
+            stmt.setString(2, invitedEmail);
+            int rowsAffected = stmt.executeUpdate();
+
+            if (rowsAffected == 0) {
+                response.setSuccess(false);
+                response.setMessage("No se encontró ninguna solicitud pendiente para actualizar.");
+                return response;
+            }
+
+            // 2. Si fue aceptada, insertar en group_members
+            if (data.getAccepted()) {
+                PreparedStatement insertStmt = connection.prepareStatement(INSERT_GROUP_MEMBER);
+                insertStmt.setString(1, groupName);
+                insertStmt.setString(2, invitedEmail);
+                insertStmt.executeUpdate();
+
+                response.setSuccess(true);
+                response.setMessage("Has aceptado la invitación al grupo: " + groupName);
+            } else {
+                response.setSuccess(true);
+                response.setMessage("Has rechazado la invitación al grupo: " + groupName);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.log("Algo salió mal intentando actualizar las solicitudes con estado pendiente");
+            response.setSuccess(false);
+            response.setMessage("Error al procesar la solicitud.");
+        }
+
+        return response;
+    }
+
+
     private final String CHECK_GROUP_IN_DB = "SELECT 1 FROM groups WHERE name = ?";
     private final String CREATE_GROUP = "INSERT INTO groups (name, description, creator_email) VALUES (?, ?, ?)";
     private final String SEND_REQUEST_TO_MEMBERS = "INSERT INTO group_invitations (group_name, invited_email) VALUES (?, ?)";
@@ -104,5 +154,14 @@ public class ServiceGroups {
                     "FROM group_invitations gi " +
                     "JOIN groups g ON gi.group_name = g.name " +
                     "WHERE gi.invited_email = ? AND gi.status = 'pending'";
+
+    private final String UPDATE_TO_ACCEPTED_PENDING_REQUEST =
+            "UPDATE group_invitations SET status = 'accepted' WHERE group_name = ? AND invited_email = ? AND status = 'pending'";
+
+    private final String UPDATE_TO_DECLINED_PENDING_REQUEST =
+            "UPDATE group_invitations SET status = 'rejected' WHERE group_name = ? AND invited_email = ? AND status = 'pending'";
+
+    private final String INSERT_GROUP_MEMBER =
+            "INSERT INTO group_members (group_name, user_email) VALUES (?, ?)";
 
 }

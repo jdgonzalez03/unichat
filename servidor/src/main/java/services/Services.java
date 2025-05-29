@@ -129,6 +129,20 @@ public class Services {
             }
         });
 
+        server.addEventListener("response_join_group", Model_Join_Group_Response.class, new DataListener<Model_Join_Group_Response>() {
+            @Override
+            public void onData(SocketIOClient client, Model_Join_Group_Response data, AckRequest ackRequest){
+                logger.log("El usuario " + data.getInvitedEmail() + " ha respondido la solicitud a unirse al grupo: " + data.getGroupName());
+                Model_Response response = serviceGroups.responsePendingRequest(data);
+                ackRequest.sendAckData(response.isSuccess(), response.getMessage(), response.getData());
+
+                if(response.isSuccess()){
+                    //TODO: enviar lista de grupos actualizada
+                    logger.log("Debemos enviar la lista de grupos actualizada");
+                }
+            }
+        });
+
         server.addDisconnectListener(client -> {
             logger.log("Cliente desconectado: " + client.getRemoteAddress());
             // Remover cliente de la lista local

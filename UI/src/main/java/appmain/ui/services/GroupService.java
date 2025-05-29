@@ -1,6 +1,7 @@
 package appmain.ui.services;
 
 import appmain.ui.model.Model_Create_Group;
+import appmain.ui.model.Model_Join_Group_Response;
 import com.google.gson.Gson;
 import io.socket.client.Ack;
 import io.socket.client.Socket;
@@ -20,5 +21,11 @@ public class GroupService {
         String json = gson.toJson(data);
 
         socket.emit("create_group", gson.fromJson(json, Object.class), callback);
+    }
+
+    public void respondRequestToJoinGroup(Model_Join_Group_Response data, Ack callback) {
+        logger.log("Llamando a servicio de join grupo");
+        String json = gson.toJson(data);
+        socket.emit("response_join_group", gson.fromJson(json, Object.class), callback);
     }
 }

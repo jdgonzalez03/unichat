@@ -215,6 +215,7 @@ public class MainViewController {
 
             RequestViewController controller = loader.getController();
             controller.setRequests(getRequests());
+            controller.setInvitedEmail(email);
 
             Stage requestStage= new Stage();
             requestStage.initStyle(StageStyle.UNDECORATED);

@@ -1,14 +1,20 @@
 package appmain.ui.Controllers;
 
 import appmain.ui.model.Model_Join_Group;
+import appmain.ui.model.Model_Join_Group_Response;
+import appmain.ui.services.GroupService;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.scene.control.*;
+import utils.Logger;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class RequestViewController {
     @FXML
@@ -18,7 +24,10 @@ public class RequestViewController {
     private VBox requestListContainer;
 
     private List<Model_Join_Group> requests;
+    private String invitedEmail = "";
 
+    private Logger logger = Logger.getInstance();
+    private GroupService groupService = new GroupService();
 
 
     @FXML
@@ -49,11 +58,11 @@ public class RequestViewController {
 
             Button acceptButton = new Button("Aceptar");
             acceptButton.getStyleClass().add("accept-button");
-            acceptButton.setOnAction(e -> handleAccept(req));
+            acceptButton.setOnAction(e -> handleAcceptOrReject(req, true));
 
             Button rejectButton = new Button("Rechazar");
             rejectButton.getStyleClass().add("reject-button");
-            rejectButton.setOnAction(e -> handleReject(req));
+            rejectButton.setOnAction(e -> handleAcceptOrReject(req, false));
 
             buttonsBox.getChildren().addAll(acceptButton, rejectButton);
             requestItem.getChildren().addAll(label, buttonsBox);
@@ -62,20 +71,62 @@ public class RequestViewController {
         }
     }
 
-    // Métodos manejadores (debes implementar la lógica)
-    private void handleAccept(Model_Join_Group req) {
-        System.out.println("Aceptado: " + req.getName_group());
-        // lógica adicional aquí
+    private void handleAcceptOrReject(Model_Join_Group req, boolean accept) {
+
+        if (accept) {
+            logger.log("Aceptado: " + req.getName_group());
+        }else{
+            logger.log("Rechazado: " + req.getName_group());
+        }
+        Model_Join_Group_Response data = new Model_Join_Group_Response();
+
+        data.setAccepted(accept);
+        data.setGroupName(req.getName_group());
+        data.setInvitedEmail(getInvitedEmail());
+
+        AtomicBoolean success = new AtomicBoolean(false);
+        AtomicReference<String> message = new AtomicReference<>("Algo salió mal.");
+
+        groupService.respondRequestToJoinGroup(data, (args) -> {
+            if (args.length >= 2) {
+                success.set((Boolean) args[0]);
+                message.set((String) args[1]);
+
+                logger.log("Éxito: " + success);
+                logger.log("Mensaje: " + message);
+            }
+            Platform.runLater(() -> {
+                if (success.get()) {
+                    showAlert("Invitaciones de grupo", message.get(), Alert.AlertType.INFORMATION);
+                    requests.remove(req);
+                    renderRequests();
+                }else{
+                    showAlert("Error", message.get(), Alert.AlertType.WARNING);
+                }
+            });
+        });
     }
 
-    private void handleReject(Model_Join_Group req) {
-        System.out.println("Rechazado: " + req.getName_group());
-        // lógica adicional aquí
-    }
 
 
     public void setRequests(List<Model_Join_Group> requests) {
         this.requests = requests;
         renderRequests();
+    }
+
+    public String getInvitedEmail() {
+        return invitedEmail;
+    }
+
+    public void setInvitedEmail(String invitedEmail) {
+        this.invitedEmail = invitedEmail;
+    }
+
+    private void showAlert(String title, String message, Alert.AlertType type) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
