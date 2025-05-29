@@ -41,7 +41,7 @@ public class ServiceGroups {
 
             PreparedStatement createGroupStmt = connection.prepareStatement(CREATE_GROUP);
             createGroupStmt.setString(1, group.getName());
-            createGroupStmt.setString(2, group.getCreator_email());
+            createGroupStmt.setString(2, group.getDescription());
             createGroupStmt.setString(3, group.getCreator_email());
 
             int rowsInseted = createGroupStmt.executeUpdate();
@@ -63,6 +63,12 @@ public class ServiceGroups {
                     logger.log("Invitacion para unirse al grupo " + group.getName() + " ha sido enviada a: " + member.getUser().getEmail());
                 }
             }
+
+            //Hacer miembro al dueño del grupo
+            PreparedStatement addOwnerStmt = connection.prepareStatement(INSERT_GROUP_MEMBER);
+            addOwnerStmt.setString(1, group.getName());
+            addOwnerStmt.setString(2, group.getCreator_email());
+            addOwnerStmt.executeUpdate();
 
         }catch (Exception e){
             logger.log("Algo salió mal creando el grupo: " + group.getName() + e.getMessage());

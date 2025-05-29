@@ -121,9 +121,9 @@ public class Services {
                 logger.log("El usuario " + data.getCreator_email() + " esta tratando de crear un grupo");
                 Model_Response response = serviceGroups.createGroup(data);
 
-                Model_Join_Group request = new Model_Join_Group(data.getName(), data.getDescription(), data.getCreator_email());
                 for (Model_User_With_Status member: data.getMembers()) {
-                    sendRequestToJoinGroup(member, request);
+                    List<Model_Join_Group> requests = serviceGroups.getAllPendingRequests(member.getUser());
+                    sendAllPendingRequestToJoinGroup(member.getUser(), requests);
                 }
                 ackRequest.sendAckData(response.isSuccess(), response.getMessage(), response.getData());
             }
@@ -179,14 +179,6 @@ public class Services {
             if (c.getUser().getEmail().equals(message.getReceiverEmail()) ) {
                 Model_Receive_Message msg = serviceMessage.saveMessageAndFormat(message);
                 c.getClient().sendEvent("receive_message_from", msg);
-            }
-        }
-    }
-
-    private void sendRequestToJoinGroup(Model_User_With_Status user, Model_Join_Group request){
-        for (Model_Client c : localClients) {
-            if (c.getUser().getEmail().equals(user.getUser().getEmail())) {
-                c.getClient().sendEvent("request_join_group", request);
             }
         }
     }

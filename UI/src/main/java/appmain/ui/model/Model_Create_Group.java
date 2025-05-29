@@ -13,8 +13,7 @@ public class Model_Create_Group {
     private Date creation_date;
     private List<Model_User_With_Status> members = new ArrayList<>();
 
-    public Model_Create_Group(String name, String description, String creator_email, Date creation_date) {
-        this.id_group = id_group;
+    public Model_Create_Group(String name, String description, String creator_email) {
         this.name = name;
         this.description = description;
         this.creator_email = creator_email;
