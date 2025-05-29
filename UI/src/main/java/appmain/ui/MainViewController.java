@@ -53,6 +53,7 @@ public class MainViewController {
     //usuarios
     private List<Model_User_With_Status> users;
     private List<Model_Join_Group> requests = new ArrayList<>();
+    private List<Model_My_Groups> groups = new ArrayList<>();
 
 
     // Variables para los datos del perfil y estado de autenticación
@@ -330,6 +331,18 @@ public class MainViewController {
                 contactsContainer.getChildren().add(userBox);
             }
             this.users = users;
+        });
+    }
+
+    public void updateGroupList(List<Model_My_Groups> groups) {
+        Platform.runLater(() -> {
+            groupsContainer.getChildren().clear();
+            for (Model_My_Groups group : groups) {
+                int totalMembers = group.getTotalMembers();
+                HBox groupBox = createContactItem(group.getName() + " by " + group.getCreator(), Integer.toString(totalMembers), true);
+                groupsContainer.getChildren().add(groupBox);
+            }
+            this.groups = groups;
         });
     }
 

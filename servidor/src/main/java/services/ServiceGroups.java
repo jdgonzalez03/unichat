@@ -151,6 +151,29 @@ public class ServiceGroups {
         return response;
     }
 
+    public List<Model_My_Groups> getAllMyGroups(Model_User user){
+        List<Model_My_Groups> myGroups = new ArrayList<>();
+        logger.log("Obteniendo todos mis grupos");
+        try {
+            PreparedStatement stmt = connection.prepareStatement(GET_ALL_MY_GROUPS);
+            stmt.setString(1, user.getEmail());
+            ResultSet resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                Model_My_Groups group = new Model_My_Groups();
+                group.setName(resultSet.getString("group_name"));
+                group.setDescription(resultSet.getString("description"));
+                group.setCreator(resultSet.getString("creator_email"));
+                group.setTotalMembers(resultSet.getInt("total_members"));
+                myGroups.add(group);
+            }
+
+        }catch (Exception e) {
+            e.printStackTrace();
+            logger.log("Algo salió mal obteniendo todos mis grupos");
+        }
+
+        return myGroups;
+    }
 
     private final String CHECK_GROUP_IN_DB = "SELECT 1 FROM groups WHERE name = ?";
     private final String CREATE_GROUP = "INSERT INTO groups (name, description, creator_email) VALUES (?, ?, ?)";
@@ -169,5 +192,7 @@ public class ServiceGroups {
 
     private final String INSERT_GROUP_MEMBER =
             "INSERT INTO group_members (group_name, user_email) VALUES (?, ?)";
+
+    private final String GET_ALL_MY_GROUPS = "SELECT g.name AS group_name, g.description, g.creator_email, COUNT(gm2.user_email) AS total_members FROM group_members gm1 JOIN groups g ON gm1.group_name = g.name LEFT JOIN group_members gm2 ON g.name = gm2.group_name WHERE gm1.user_email = ? GROUP BY g.name, g.description, g.creator_email";
 
 }

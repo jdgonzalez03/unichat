@@ -91,6 +91,9 @@ public class Services {
                     //Enviar las invitaciones
                     List<Model_Join_Group> requests = serviceGroups.getAllPendingRequests((Model_User) response.getData());
                     sendAllPendingRequestToJoinGroup((Model_User) response.getData(), requests);
+
+                    //Enviar todos los grupos a los que pertenece el cliente
+                    sendAllGroups((Model_User) response.getData());
                 }
             }
         });
@@ -126,6 +129,12 @@ public class Services {
                     sendAllPendingRequestToJoinGroup(member.getUser(), requests);
                 }
                 ackRequest.sendAckData(response.isSuccess(), response.getMessage(), response.getData());
+
+                if(response.isSuccess()){
+                    Model_User user = new Model_User();
+                    user.setEmail(data.getCreator_email());
+                    sendAllGroups(user);
+                }
             }
         });
 
@@ -137,8 +146,8 @@ public class Services {
                 ackRequest.sendAckData(response.isSuccess(), response.getMessage(), response.getData());
 
                 if(response.isSuccess()){
-                    //TODO: enviar lista de grupos actualizada
-                    logger.log("Debemos enviar la lista de grupos actualizada");
+                    logger.log("Enviando lista de grupos actualizada");
+                    broadcastGroupListToAllClients();
                 }
             }
         });
@@ -169,6 +178,24 @@ public class Services {
             );
             List<Model_User_With_Status> personalizedList = serviceUser.getUsers(request, localClients);
             c.getClient().sendEvent("list_users", personalizedList.toArray());
+        }
+    }
+
+    private void sendAllGroups(Model_User user){
+        for(Model_Client c : localClients){
+            Model_User u = c.getUser();
+            if(u.getEmail().equals(user.getEmail())){
+                List<Model_My_Groups> groups = serviceGroups.getAllMyGroups(user);
+                c.getClient().sendEvent("list_groups", groups.toArray());
+            }
+        }
+    }
+
+    private void broadcastGroupListToAllClients() {
+        for (Model_Client c : localClients) {
+            Model_User u = c.getUser();
+            List<Model_My_Groups> groups = serviceGroups.getAllMyGroups(u);
+            c.getClient().sendEvent("list_groups", groups.toArray());
         }
     }
 

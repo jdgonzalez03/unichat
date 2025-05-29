@@ -2,6 +2,7 @@ package appmain.ui.services;
 
 import appmain.ui.MainViewController;
 import appmain.ui.model.Model_Join_Group;
+import appmain.ui.model.Model_My_Groups;
 import appmain.ui.model.Model_Receive_Message;
 import appmain.ui.model.Model_User_With_Status;
 import com.google.gson.Gson;
@@ -76,6 +77,22 @@ public class Services {
                         Platform.runLater(()->{
                             mainViewController.receiveMessage(msg);
                         });
+                    }
+                }
+            });
+            client.on("list_groups", new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    Gson gson = new Gson();
+                    List<Model_My_Groups> groups = new ArrayList<>();
+                    for (Object o : args) {
+                        Model_My_Groups group = gson.fromJson(o.toString(), Model_My_Groups.class);
+                        groups.add(group);
+                    }
+
+                    if (mainViewController != null) {
+                        logger.log("Lista de grupos, esta siendo actualizada");
+                        mainViewController.updateGroupList(groups);
                     }
                 }
             });
